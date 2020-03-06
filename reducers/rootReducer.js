@@ -13,6 +13,11 @@ const rootReducer = (state = initState, action) => {
         ...state,
         timerStarted: true,
       };
+    case 'UPDATE_TIMER':
+      return {
+        ...state,
+        timerTime: action.payload
+      };
     case 'CAPTURE_TIMER':
       let lap = [];
       lap = lap.concat(state.timeCaptured);
@@ -30,7 +35,13 @@ const rootReducer = (state = initState, action) => {
         ...state,
         timerTime: 0,
         timeCaptured: [],
+        timerStarted: false
       };
+    // case 'RESUME_TIMER':
+    //   return {
+    //     ...state,
+    //     timerStarted: true
+    //   };
     default:
       return state;
   }

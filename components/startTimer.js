@@ -8,18 +8,4 @@ const Start = props => {
   ) : null;
 };
 
-// const mapStateToProps = state => {
-//   console.log(state);
-//   return state;
-// };
-//
-// const mapDispatchToProps = dispatch => ({
-//   start: () => dispatch({type: 'START_TIMER'}),
-// });
-//
-// export default connect(
-//   mapStateToProps,
-//   mapDispatchToProps,
-// )(Start);
-
 export default Start;

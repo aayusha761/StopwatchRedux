@@ -7,53 +7,57 @@ import {
   Text,
   View,
   ScrollView,
+    Button
 } from 'react-native';
 import TimerClock from './TimerClock';
 import TimerWatch from './TimerWatch';
 import {connect} from 'react-redux';
 import SyncStorage from 'sync-storage';
-import store from '../reducers/rootReducer';
+import Lap from './LapShow';
+import Resume from './resumeTimer';
 
 function Stopwatch(props) {
-  const customMiddleWare = store => next => action => {
-    useEffect(() => {
-      (async () => {
-        await SyncStorage.init();
-        setTimerTime(SyncStorage.get('time'));
-      })();
-    }, []);
-    console.log("Middleware triggered:", action);
-    next(action);
-  };
-  // useEffect(() => {
-  //   (async () => {
-  //     await SyncStorage.init();
-  //     setTimerTime(SyncStorage.get('time'));
-  //   })();
-  // }, []);
-  const [timer, setTimer] = useState(0);
-  const [timerTime, setTimerTime] = useState(0);
+  // const customMiddleWare = store => next => action => {
+  //   useEffect(() => {
+  //     (async () => {
+  //       await SyncStorage.init();
+  //       setTimerTime(SyncStorage.get('time'));
+  //     })();
+  //   }, []);
+  //   console.log("Middleware triggered:", action);
+  //   next(action);
+  // };
+  useEffect(() => {
+    (async () => {
+      await SyncStorage.init();
+      props.update(SyncStorage.get('time'));
+    })();
+  }, []);
+  const [timer, setTImer] = useState();
 
   function startTimer() {
     props.start();
-    const timeNow = Date.now() - timerTime;
+    const timeNow = Date.now() - props.timerTime;
     //console.log(timeNow);
-    setTimer(
-      setInterval(() => {
-        setTimerTime(Date.now() - timeNow);
-      }, 10),
-    );
+     setTImer(setInterval( async () => {
+        props.update(Date.now() - timeNow);
+        await SyncStorage.set('time', Date.now() - timeNow);
+      }, 10))
   }
+
 
   async function stopTimer() {
     props.stop();
     clearInterval(timer);
     //console.log(timerTime);
 
-
-    await SyncStorage.set('time', timerTime);
+    await SyncStorage.set('time', props.timerTime);
     console.log(SyncStorage.get('time'));
   }
+
+  // function resumeTimer() {
+  //   props.resume();
+  // }
 
   function resetTimer() {
     props.reset();
@@ -62,11 +66,6 @@ function Stopwatch(props) {
   function captureTimer() {
     props.capture();
   }
-
-  let centiseconds = ('0' + (Math.floor(timerTime / 10) % 100)).slice(-2);
-  let seconds = ('0' + (Math.floor(timerTime / 1000) % 60)).slice(-2);
-  let minutes = ('0' + (Math.floor(timerTime / 60000) % 60)).slice(-2);
-  let hours = ('0' + Math.floor(timerTime / 3600000)).slice(-2);
 
   return (
     <View style={styles.container}>
@@ -78,16 +77,17 @@ function Stopwatch(props) {
         }}>
         <Text>StopWatch</Text>
         <TimerWatch
-          hours={hours}
-          minutes={minutes}
-          seconds={seconds}
-          centiseconds={centiseconds}
+          timerTime={props.timerTime}
         />
-
         <Start
           timerStarted={props.timerStarted}
           timerTime={props.timerTime}
           startTimer={startTimer}
+        />
+        <Resume
+            resumeTimer={startTimer}
+            timerStarted={props.timerStarted}
+            timerTime={props.timerTime}
         />
         <Stop stopTimer={stopTimer} timerStarted={props.timerStarted} />
         <Reset
@@ -96,20 +96,13 @@ function Stopwatch(props) {
           timerTime={props.timerTime}
         />
         <TimerClock
-          timerTime={timerTime}
+          timerTime={props.timerTime}
           timeArrays={props.timeCaptured}
           captureLap={captureTimer}
         />
+        <Button onPress={() => this.props.navigate('More')} title={'View more'}/>
       </View>
-      <ScrollView contentContainerStyle={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        {props.timeCaptured.map((lap, index) => {
-          return (
-              <View key={index}>
-                <Text>{lap}</Text>
-              </View>
-          );
-        })}
-      </ScrollView>
+      <Lap timeCaptured={props.timeCaptured} />
     </View>
   );
 }
@@ -125,6 +118,7 @@ const mapDispatchToProps = dispatch => ({
   stop: () => dispatch({type: 'STOP_TIMER'}),
   reset: () => dispatch({type: 'RESET_TIMER'}),
   capture: () => dispatch({type: 'CAPTURE_TIMER'}),
+  update: (payload) => dispatch({ type: 'UPDATE_TIMER', payload: payload }),
 });
 
 export default connect(
