@@ -32,6 +32,9 @@ function Stopwatch(props) {
       await SyncStorage.init();
       props.update(SyncStorage.get('time'));
     })();
+    return () => {
+      clearInterval(timer);
+    }
   }, []);
   const [timer, setTImer] = useState();
 
@@ -100,9 +103,10 @@ function Stopwatch(props) {
           timeArrays={props.timeCaptured}
           captureLap={captureTimer}
         />
-        <Button onPress={() => this.props.navigate('More')} title={'View more'}/>
+        <Button onPress={() => props.navigation.navigate('Lap', {
+          data: props.timeCaptured
+        })} title={'View more'}/>
       </View>
-      <Lap timeCaptured={props.timeCaptured} />
     </View>
   );
 }
